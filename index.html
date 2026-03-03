@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURBO Y2K STORE</title>
+    <!-- Шрифт -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================================
+           CSS STYLES
+           ============================================================ */
+        :root {
+            --neon-pink: #FF2D7B;
+            --neon-blue: #00D4FF;
+            --neon-green: #7BFF00;
+            --neon-yellow: #FFE500;
+            --bg-dark: #0A0612;
+            --chrome: linear-gradient(135deg, #FF2D7B, #FFE500, #00D4FF, #7BFF00, #FF2D7B);
+            --mouse-x: 50;
+            --mouse-y: 50;
+        }
+
+        * { box-sizing: border-box; margin: 0; }
+        body { 
+            margin: 0; 
+            background: var(--bg-dark); 
+            color: #fff; 
+            font-family: 'Chakra Petch', sans-serif; 
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        /* Animations */
+        @keyframes gradShift { 
+            0% { background-position: 0% 50%; } 
+            50% { background-position: 100% 50%; } 
+            100% { background-position: 0% 50%; } 
+        }
+        @keyframes floatSlow { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-12px); } 
+        }
+        @keyframes spin { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
+        @keyframes pulse { 
+            0%, 100% { opacity: 1; } 
+            50% { opacity: 0.4; } 
+        }
+        @keyframes ticker { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-33.33%); } 
+        }
+
+        /* Utilities */
+        .glass {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .chrome-text {
+            background: var(--chrome);
+            background-size: 300% 300%;
+            animation: gradShift 4s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .chrome-bg {
+            background: var(--chrome);
+            background-size: 300% 300%;
+            animation: gradShift 4s ease infinite;
+        }
+        .pill-btn {
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.6);
+            padding: 8px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+        .pill-btn.active {
+            border-color: var(--color, var(--neon-pink));
+            background: rgba(255,255,255,0.05); /* Simplified for vanilla */
+            color: var(--color, var(--neon-pink));
+        }
+        
+        button { font-family: 'Chakra Petch', sans-serif; }
+        input, select { font-family: 'Chakra Petch', sans-serif; }
+
+        /* Layout */
+        #app { min-height: 100vh; display: flex; flex-direction: column; }
+        main { flex: 1; }
+        
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 1px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 0 40px rgba(255, 45, 123, 0.27), 0 0 80px rgba(0, 212, 255, 0.14);
+            color: #0A0612;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Content will be rendered here by JS -->
+</div>
+<div id="toast"></div>
+
+<script>
+    // ============================================================
+    // DATA & CONSTANTS
+    // ============================================================
+    const CATS = [
+        { id: "run", name: "БЕГ", em: "🏃‍♂️", hue: 320 },
+        { id: "ski", name: "ЛЫЖИ", em: "⛷️", hue: 200 },
+        { id: "snow", name: "БОРД", em: "🏂", hue: 270 },
+        { id: "fit", name: "ФИТНЕС", em: "💪", hue: 40 },
+        { id: "bike", name: "ВЕЛО", em: "🚴", hue: 160 },
+        { id: "camp", name: "АУТДОР", em: "⛺", hue: 100 },
+    ];
+    const PRODS = [
+        { id:1, n:"Air Zoom Pegasus 41", b:"NIKE", c:"run", p:14990, op:17990, r:4.8, rv:234, sz:["40","41","42","43","44","45"], cl:["#1a1a1a","#FF2D7B","#00D4FF"], d:"Легендарные беговые кроссовки. Пена React + Air Zoom = мягкость + отдача. Обновлённый верх Flymesh.", tag:"★ HIT" },
+        { id:2, n:"Ultraboost Light", b:"ADIDAS", c:"run", p:18990, op:22990, r:4.9, rv:189, sz:["39","40","41","42","43","44"], cl:["#F0F0F0","#1a1a1a","#7BFF00"], d:"На 30% легче предшественника. Boost нового поколения — невесомая энергоотдача.", tag:"✦ NEW" },
+        { id:3, n:"Speedcross 6 GTX", b:"SALOMON", c:"run", p:13490, op:null, r:4.7, rv:156, sz:["40","41","42","43","44","45","46"], cl:["#1a1a1a","#FF8800","#00D4FF"], d:"Агрессивный протектор Contagrip + мембрана Gore-Tex. Создан для грязи и камней.", tag:null },
+        { id:4, n:"Nuptse 700 Down", b:"THE NORTH FACE", c:"camp", p:32990, op:39990, r:4.9, rv:312, sz:["S","M","L","XL","XXL"], cl:["#1a1a1a","#FFE500","#00D4FF"], d:"Иконический пуховик 700 fill power. Из гималайских экспедиций — в городские джунгли.", tag:"♛ TOP" },
+        { id:5, n:"Redster S9 FIS", b:"ATOMIC", c:"ski", p:89990, op:109990, r:4.6, rv:45, sz:["155","160","165","170","175"], cl:["#FF2D7B"], d:"FIS-гоночные лыжи. Карбоновый сердечник. Для тех, кто считает сотые.", tag:"◆ PRO" },
+        { id:6, n:"Custom X Camber", b:"BURTON", c:"snow", p:64990, op:null, r:4.8, rv:78, sz:["154","156","158","160","162"], cl:["#1a1a1a"], d:"Жёсткий кембер + карбон. Абсолютный контроль на любой скорости.", tag:null },
+        { id:7, n:"HOVR Phantom 3", b:"UNDER ARMOUR", c:"fit", p:16490, op:19990, r:4.5, rv:98, sz:["40","41","42","43","44","45"], cl:["#1a1a1a","#F0F0F0","#FF2D7B"], d:"Энергоотдача HOVR + встроенный датчик = умная тренировка в каждом шаге.", tag:"⚡ SMART" },
+        { id:8, n:"Titanium OutDry EX", b:"COLUMBIA", c:"camp", p:24990, op:29990, r:4.4, rv:67, sz:["S","M","L","XL"], cl:["#1a1a1a","#7BFF00","#00D4FF"], d:"Мембрана снаружи. Революционная конструкция OutDry Extreme.", tag:null },
+        { id:9, n:"Gel-Kayano 30", b:"ASICS", c:"run", p:17490, op:null, r:4.7, rv:201, sz:["40","41","42","43","44","45"], cl:["#00D4FF","#1a1a1a","#FF8800"], d:"30 лет эволюции. FF Blast+ и 4D Guidance = стабильность на марафоне.", tag:null },
+        { id:10, n:"Deviate Nitro 2", b:"PUMA", c:"run", p:15990, op:18990, r:4.6, rv:134, sz:["39","40","41","42","43","44","45"], cl:["#F0F0F0","#FF2D7B","#FFE500"], d:"Карбоновая пластина NITRO ELITE. Каждый шаг — ускорение.", tag:"↑ FAST" },
+        { id:11, n:"FuelCell Elite v2", b:"NEW BALANCE", c:"run", p:22990, op:27990, r:4.8, rv:89, sz:["40","41","42","43","44"], cl:["#FF2D7B","#00D4FF","#F0F0F0"], d:"Двойная карбоновая пластина. Пена FuelCell. Рекорд ждёт.", tag:"☆ RACE" },
+        { id:12, n:"Nano X3", b:"REEBOK", c:"fit", p:11990, op:14990, r:4.5, rv:167, sz:["39","40","41","42","43","44","45","46"], cl:["#1a1a1a","#F0F0F0","#FF8800"], d:"Кроссфит. Тяжёлая атлетика. Бег. Прыжки. Одни кроссовки для всего.", tag:null },
+    ];
+
+    // Helpers
+    const fmt = v => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+    const pct = (p, o) => o ? Math.round((1 - p / o) * 100) : 0;
+    const catOf = id => CATS.find(c => c.id === id);
+    
+    // Colors
+    const neonPink = "#FF2D7B";
+    const neonBlue = "#00D4FF";
+    const neonGreen = "#7BFF00";
+    const neonYellow = "#FFE500";
+
+    // ============================================================
+    // STATE MANAGEMENT
+    // ============================================================
+    const state = {
+        page: 'home', // home, catalog, product, cart, checkout
+        cart: [],
+        favs: [],
+        product: null,
+        catFilter: null,
+        brandFilter: [],
+        search: "",
+        sort: "popular",
+        checkoutStep: 1,
+        ordered: false,
+        sizeSelection: {}, // { productId: size }
+        colorSelection: {}  // { productId: color }
+    };
+
+    // ============================================================
+    // CORE FUNCTIONS
+    // ============================================================
+    
+    function notify(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.style.display = 'block';
+        toast.style.background = 'var(--chrome)';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2500);
+    }
+
+    function addToCart(p, s, c) {
+        const k = `${p.id}-${s}-${c}`;
+        const existing = state.cart.find(i => i.k === k);
+        if (existing) {
+            existing.q += 1;
+        } else {
+            state.cart.push({ k, p, s, c, q: 1 });
+        }
+        notify("⚡ ДОБАВЛЕНО!");
+        render();
+    }
+
+    function removeFromCart(k) {
+        state.cart = state.cart.filter(i => i.k !== k);
+        render();
+    }
+
+    function updateQty(k, d) {
+        const item = state.cart.find(i => i.k === k);
+        if (item) {
+            item.q = Math.max(1, item.q + d);
+            render();
+        }
+    }
+
+    function toggleFav(id) {
+        if (state.favs.includes(id)) {
+            state.favs = state.favs.filter(i => i !== id);
+        } else {
+            state.favs.push(id);
+        }
+        render();
+    }
+
+    function navigate(page, data = null) {
+        state.page = page;
+        if (page === 'product') state.product = data;
+        if (page === 'catalog') {
+            state.catFilter = data;
+            state.search = "";
+            state.brandFilter = [];
+        }
+        if (page === 'home') {
+            state.catFilter = null;
+            state.search = "";
+            state.brandFilter = [];
+        }
+        window.scrollTo(0, 0);
+        render();
+    }
+
+    function getFilteredProducts() {
+        let l = [...PRODS];
+        if (state.catFilter) l = l.filter(p => p.c === state.catFilter);
+        if (state.brandFilter.length) l = l.filter(p => state.brandFilter.includes(p.b));
+        if (state.search) { 
+            const s = state.search.toLowerCase(); 
+            l = l.filter(p => p.n.toLowerCase().includes(s) || p.b.toLowerCase().includes(s)); 
+        }
+        switch (state.sort) { 
+            case "pa": l.sort((a,b)=>a.p-b.p); break; 
+            case "pd": l.sort((a,b)=>b.p-a.p); break; 
+            case "r": l.sort((a,b)=>b.r-a.r); break; 
+            default: l.sort((a,b)=>b.rv-a.rv); 
+        }
+        return l;
+    }
+
+    function getTotal() {
+        return state.cart.reduce((s, i) => s + i.p.p * i.q, 0);
+    }
+
+    function getCount() {
+        return state.cart.reduce((s, i) => s + i.q, 0);
+    }
+
+    // ============================================================
+    // COMPONENT RENDERERS (HTML Strings)
+    // ============================================================
+
+    function renderHeader() {
+        const cnt = getCount();
+        const favCount = state.favs.length;
+        const navItems = [
+            { l: "КАТАЛОГ", action: "navigate", args: "['catalog', null]" },
+            { l: "SALE ★", action: "navigate", args: "['catalog', null]", hot: true },
+            { l: "БРЕНДЫ", action: "navigate", args: "['catalog', null]" },
+        ];
+
+        return `
+        <header style="position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.06); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <!-- Ticker -->
+            <div style="overflow: hidden; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
+                <div style="display: flex; gap: 60; white-space: nowrap; animation: ticker 30s linear infinite;">
+                    ${['⚡ БЕСПЛАТНАЯ ДОСТАВКА ОТ 5000₽', '★ НОВАЯ КОЛЛЕКЦИЯ SPRING 2026', '♛ ВОЗВРАТ 30 ДНЕЙ', '◆ 100% ОРИГИНАЛ', '↑ СКИДКИ ДО 50%', '☆ +5000 БОНУСОВ НОВЫМ'].map(m => 
+                        `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.4); font-weight: 500;">${m}</span>`
+                    ).join('')}
+                     ${['⚡ БЕСПЛАТНАЯ ДОСТАВКА ОТ 5000₽', '★ НОВАЯ КОЛЛЕКЦИЯ SPRING 2026', '♛ ВОЗВРАТ 30 ДНЕЙ', '◆ 100% ОРИГИНАЛ', '↑ СКИДКИ ДО 50%', '☆ +5000 БОНУСОВ НОВЫМ'].map(m => 
+                        `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.4); font-weight: 500;">${m}</span>`
+                    ).join('')}
+                </div>
+            </div>
+            
+            <div style="max-width: 1400; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; height: 72; gap: 24;">
+                <!-- Logo -->
+                <div onclick="navigate('home')" style="cursor: pointer; display: flex; align-items: center; gap: 12; flex-shrink: 0;">
+                    <div style="width: 42; height: 42; border-radius: 50%; background: var(--chrome); background-size: 300% 300%; animation: gradShift 4s ease infinite; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px ${neonPink}44, 0 0 40px ${neonBlue}22;">
+                        <div style="width: 36; height: 36; border-radius: 50%; background: #0A0612; display: flex; align-items: center; justify-content: center;">
+                            <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 16; font-weight: 700;">T</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 20; font-weight: 700; letter-spacing: 3px;">TURBO</span>
+                        <span style="display: block; font-family: 'Chakra Petch', sans-serif; font-size: 8; letter-spacing: 4px; color: rgba(255,255,255,0.3); margin-top: -2;">SPORT.FUTURE</span>
+                    </div>
+                </div>
+
+                <!-- Nav -->
+                <nav style="display: flex; gap: 4; flex: 1; margin-left: 20;">
+                    ${navItems.map(n => `
+                        <button onclick="navigate('catalog', null)" style="border: none; background: none; padding: 8px 18px; cursor: pointer; font-family: 'Chakra Petch', sans-serif; font-size: 12; font-weight: 600; letter-spacing: 2px; color: ${n.hot ? neonPink : 'rgba(255,255,255,0.5)'}; border-radius: 20; transition: all 0.25s;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.color='#fff'"
+                        onmouseout="this.style.background='none'; this.style.color='${n.hot ? neonPink : 'rgba(255,255,255,0.5)'}'">
+                            ${n.l}
+                        </button>
+                    `).join('')}
+                </nav>
+
+                <!-- Search -->
+                <div style="display: flex; align-items: center; gap: 8; background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 50px; padding: 8px 20px; width: 240; border: 1px solid rgba(255,255,255,0.12);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input value="${state.search}" oninput="state.search = this.value; if(event.key === 'Enter') navigate('catalog', null)" onkeydown="if(event.key === 'Enter') navigate('catalog', null)"
+                    placeholder="поиск..." style="border: none; background: none; color: #fff; font-size: 12; font-family: 'Chakra Petch', sans-serif; letter-spacing: 1px; outline: none; width: 100%" />
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 8; align-items: center; flex-shrink: 0;">
+                    <button style="border: none; background: none; cursor: pointer; padding: 8;" onclick="notify('Избранное скоро будет!')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="${favCount ? neonPink : 'none'}" stroke="${favCount ? neonPink : 'rgba(255,255,255,0.4)'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                    <button onclick="navigate('cart')" style="border: ${cnt > 0 ? `2px solid ${neonPink}` : '2px solid rgba(255,255,255,0.1)'}; background: ${cnt > 0 ? `${neonPink}22` : 'rgba(255,255,255,0.04)'}; border-radius: 50px; cursor: pointer; padding: 8px 22px; display: flex; align-items: center; gap: 8; transition: all 0.3s; color: ${cnt > 0 ? neonPink : 'rgba(255,255,255,0.5)'}; box-shadow: ${cnt > 0 ? `0 0 20px ${neonPink}33` : 'none'};">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        ${cnt > 0 ? `<span style="font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 14;">${cnt}</span>` : ''}
+                    </button>
+                </div>
+            </div>
+        </header>
+        `;
+    }
+
+    function renderCard(p, wide = false) {
+        const cat = catOf(p.c);
+        const isFav = state.favs.includes(p.id);
+        const hue = cat?.hue || 320;
+        const height = wide ? 280 : 210;
+        const fontSize = wide ? 90 : 64;
+        const titleSize = wide ? 18 : 15;
+        const priceSize = wide ? 22 : 18;
+
+        return `
+        <div onclick="navigate('product', ${p.id})" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; overflow: hidden; cursor: pointer; transition: all 0.4s ease; position: relative; grid-column: ${wide ? 'span 2' : 'span 1'}; border-color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06);"
+        onmouseover="this.style.transform='translateY(-8px)'; this.style.borderColor='hsla(${hue}, 80%, 60%, 0.3)'; this.style.boxShadow='0 20px 60px rgba(0,0,0,0.3), 0 0 30px hsla(${hue}, 80%, 60%, 0.1)'"
+        onmouseout="this.style.transform='none'; this.style.borderColor='rgba(255,255,255,0.06)'; this.style.boxShadow='none'">
+            ${p.tag ? `
+            <span style="position: absolute; top: 14; left: 14; z-index: 2; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 50px; padding: 5px 14px; font-family: 'Chakra Petch', sans-serif; font-size: 10; font-weight: 700; letter-spacing: 1.5px; color: hsla(${hue}, 80%, 70%, 1); border: 1px solid hsla(${hue}, 80%, 60%, 0.3); box-shadow: 0 0 12px hsla(${hue}, 80%, 60%, 0.15);">
+                ${p.tag}
+            </span>` : ''}
+            
+            <button onclick="event.stopPropagation(); toggleFav(${p.id})" style="position: absolute; top: 14; right: 14; z-index: 2; width: 36; height: 36; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.12);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFav ? neonPink : 'none'}" stroke="${isFav ? neonPink : 'rgba(255,255,255,0.4)'}" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+            </button>
+            
+            <div style="height: ${height}px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 80%, hsla(${hue}, 70%, 50%, 0.08), transparent 70%);">
+                <span style="font-size: ${fontSize}px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); filter: drop-shadow(0 0 20px hsla(${hue}, 80%, 60%, 0.3));">${cat?.em || '🏃'}</span>
+            </div>
+            
+            <div style="padding: 16px 22px 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6;">
+                    <span style="font-family: 'Chakra Petch', sans-serif; font-size: 10; font-weight: 700; letter-spacing: 2px; color: hsla(${hue}, 80%, 70%, 0.8);">${p.b}</span>
+                    <div style="display: flex; align-items: center; gap: 4;">
+                        <svg width="10" height="10" viewBox="0 0 20 20" fill="${neonYellow}"><path d="M10 1l2.39 4.84 5.34.78-3.87 3.77.91 5.33L10 13.27l-4.77 2.51.91-5.33L2.27 6.68l5.34-.78z"/></svg>
+                        <span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; color: rgba(255,255,255,0.4)">${p.r}</span>
+                    </div>
+                </div>
+                <h3 style="font-family: 'Chakra Petch', sans-serif; font-size: ${titleSize}px; font-weight: 600; color: #fff; margin: 0 0 12px; line-height: 1.25; letter-spacing: 0.5px;">${p.n}</h3>
+                <div style="display: flex; align-items: baseline; gap: 10;">
+                    <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: ${priceSize}px; font-weight: 700;">${fmt(p.p)}</span>
+                    ${p.op ? `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 13; color: rgba(255,255,255,0.25); text-decoration: line-through;">${fmt(p.op)}</span>` : ''}
+                    ${p.op ? `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; font-weight: 700; color: ${neonGreen}">−${pct(p.p,p.op)}%</span>` : ''}
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    function renderHero() {
+        return `
+        <section style="position: relative; max-width: 1400; margin: 24px auto; padding: 0 32px;">
+            <div style="border-radius: 32px; overflow: hidden; position: relative; min-height: 520px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                <!-- Animated gradient mesh background -->
+                <div id="hero-bg" style="position: absolute; inset: 0; z-index: 0; background: radial-gradient(ellipse 60% 50% at var(--mouse-x)% var(--mouse-y)%, ${neonPink}15 0%, transparent 70%), radial-gradient(ellipse 50% 60% at calc(100% - var(--mouse-x))% calc(100% - var(--mouse-y))%, ${neonBlue}12 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 70% 30%, ${neonGreen}08 0%, transparent 60%), radial-gradient(ellipse 30% 50% at 20% 80%, ${neonYellow}06 0%, transparent 60%); transition: background 0.5s ease;"></div>
+                
+                <!-- Floating Y2K decorations -->
+                <div style="position: absolute; top: 40; right: 80; font-size: 120; opacity: 0.04; animation: floatSlow 12s ease-in-out infinite; font-family: 'Chakra Petch', sans-serif; font-weight: 900; color: #fff;">★</div>
+                <div style="position: absolute; bottom: 60; left: 60; font-size: 80; opacity: 0.04; animation: floatSlow 10s ease-in-out infinite reverse; font-family: 'Chakra Petch', sans-serif; font-weight: 900; color: #fff;">◆</div>
+                <div style="position: absolute; top: 50%; right: 20%; width: 200; height: 200; border-radius: 50%; border: 1px solid rgba(255,255,255,0.04); animation: spin 30s linear infinite;"></div>
+                <div style="position: absolute; top: 30%; right: 15%; width: 120; height: 120; border-radius: 50%; border: 1px solid rgba(255,255,255,0.03); animation: spin 20s linear infinite reverse;"></div>
+                
+                <!-- Content -->
+                <div style="position: relative; z-index: 1; display: grid; grid-template-columns: 1.2fr 1fr; min-height: 520px;">
+                    <!-- Left -->
+                    <div style="padding: 72px 56px; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="display: inline-flex; align-items: center; gap: 10; background: rgba(255,255,255,0.08); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 50px; padding: 8px 20px; width: fit-content; margin-bottom: 28; border: 1px solid ${neonPink}33; box-shadow: 0 0 20px ${neonPink}11;">
+                            <span style="width: 8; height: 8; border-radius: 50%; background: ${neonPink}; box-shadow: 0 0 8px ${neonPink}; animation: pulse 2s ease infinite;"></span>
+                            <span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: ${neonPink}; font-weight: 600;">SPRING 2026 COLLECTION</span>
+                        </div>
+                        <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: clamp(42px, 5.5vw, 72px); font-weight: 700; color: #fff; line-height: 1.0; margin: 0 0 8px; letter-spacing: -1px;">БУДУЩЕЕ</h1>
+                        <h1 class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: clamp(42px, 5.5vw, 72px); font-weight: 700; line-height: 1.0; margin: 0 0 24px; letter-spacing: -1px;">УЖЕ ЗДЕСЬ ★</h1>
+                        <p style="font-family: 'Chakra Petch', sans-serif; font-size: 15; color: rgba(255,255,255,0.45); line-height: 1.7; max-width: 400; margin-bottom: 36; letter-spacing: 0.5px;">Спортивная экипировка нового поколения. Только оригиналы от мировых брендов. Доставка по всей России.</p>
+                        <div style="display: flex; gap: 14;">
+                            <button onclick="navigate('catalog', null)" class="chrome-bg" style="color: #0A0612; border: none; padding: 16px 40px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 14; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 30px ${neonPink}33, 0 0 60px ${neonBlue}22;"
+                            onmouseover="this.style.transform='translateY(-3px) scale(1.03)'; this.style.boxShadow='0 0 40px ${neonPink}55, 0 0 80px ${neonBlue}33'"
+                            onmouseout="this.style.transform='none'; this.style.boxShadow='0 0 30px ${neonPink}33, 0 0 60px ${neonBlue}22'">КАТАЛОГ →</button>
+                            <button style="background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 50px; padding: 16px 32px; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 600; letter-spacing: 2px; cursor: pointer; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.12);">О НАС</button>
+                        </div>
+                    </div>
+                    <!-- Right — Category bubbles -->
+                    <div style="display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 14; padding: 40px 32px;">
+                        ${CATS.map((c, i) => `
+                        <button onclick="navigate('catalog', '${c.id}')" style="background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 24px; padding: 22px 28px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8; min-width: 110px; transition: all 0.4s ease; border-color: hsla(${c.hue}, 80%, 60%, 0.15); border: 1px solid; animation: floatSlow ${8 + i * 2}s ease-in-out infinite; animation-delay: ${i * 0.5}s;"
+                        onmouseover="this.style.background='hsla(${c.hue}, 80%, 60%, 0.12)'; this.style.borderColor='hsla(${c.hue}, 80%, 60%, 0.4)'; this.style.boxShadow='0 0 30px hsla(${c.hue}, 80%, 60%, 0.2)'; this.style.transform='translateY(-6px) scale(1.05)'"
+                        onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='hsla(${c.hue}, 80%, 60%, 0.15)'; this.style.boxShadow='none'; this.style.transform='none'">
+                            <span style="font-size: 32; filter: drop-shadow(0 0 8px hsla(${c.hue}, 80%, 60%, 0.4))">${c.em}</span>
+                            <span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; font-weight: 600; letter-spacing: 2px; color: hsla(${c.hue}, 80%, 70%, 0.9)">${c.name}</span>
+                        </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </section>
+        `;
+    }
+
+    function renderSection(title, sub, items, showAll = true) {
+        return `
+        <section style="max-width: 1400; margin: 56px auto; padding: 0 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28;">
+                <div>
+                    ${sub ? `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 3px; color: ${neonPink}; font-weight: 600; display: block; margin-bottom: 6;">${sub}</span>` : ''}
+                    <h2 style="font-family: 'Chakra Petch', sans-serif; font-size: 30; font-weight: 700; color: #fff; margin: 0; letter-spacing: 1px;">${title}</h2>
+                </div>
+                ${showAll ? `<button onclick="navigate('catalog', null)" style="border: none; background: none; cursor: pointer; font-family: 'Chakra Petch', sans-serif; font-size: 12; letter-spacing: 2px; color: ${neonPink}; font-weight: 600;">ВСЕ →</button>` : ''}
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16;">
+                ${items.map((p, i) => renderCard(p, i === 0 && items.length > 3)).join('')}
+            </div>
+        </section>
+        `;
+    }
+
+    function renderPromoBanners() {
+        const banners = [
+            { icon: "🔥", title: "SALE −50%", desc: "Зимняя коллекция", color: neonPink, hue: 340 },
+            { icon: "⚡", title: "+5000 БОНУСОВ", desc: "Новым клиентам", color: neonBlue, hue: 190 },
+            { icon: "🚀", title: "EXPRESS 24Ч", desc: "Доставка по Москве", color: neonGreen, hue: 100 },
+        ];
+        return `
+        <section style="max-width: 1400; margin: 56px auto; padding: 0 32px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16;">
+                ${banners.map(b => `
+                <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; padding: 32px 28px; position: relative; overflow: hidden; cursor: pointer; border-color: ${b.color}22; border: 1px solid; transition: all 0.35s;"
+                onmouseover="this.style.borderColor='${b.color}55'; this.style.boxShadow='0 0 30px ${b.color}15'"
+                onmouseout="this.style.borderColor='${b.color}22'; this.style.boxShadow='none'">
+                    <div style="position: absolute; top: -30; right: -30; width: 120; height: 120; border-radius: 50%; background: radial-gradient(circle, ${b.color}15, transparent); filter: blur(20px)"></div>
+                    <span style="font-size: 36; display: block; margin-bottom: 14; filter: drop-shadow(0 0 12px ${b.color}66)">${b.icon}</span>
+                    <h3 style="font-family: 'Chakra Petch', sans-serif; font-size: 20; font-weight: 700; color: #fff; margin: 0 0 6px; letter-spacing: 1px">${b.title}</h3>
+                    <p style="font-family: 'Chakra Petch', sans-serif; font-size: 13; color: rgba(255,255,255,0.4); letter-spacing: 0.5px">${b.desc}</p>
+                </div>
+                `).join('')}
+            </div>
+        </section>
+        `;
+    }
+
+    function renderStats() {
+        const stats = [
+            { n: "50+", l: "БРЕНДОВ", color: neonPink },
+            { n: "10K+", l: "ТОВАРОВ", color: neonBlue },
+            { n: "24ч", l: "ДОСТАВКА", color: neonGreen },
+            { n: "30д", l: "ВОЗВРАТ", color: neonYellow },
+        ];
+        return `
+        <section style="max-width: 1400; margin: 56px auto; padding: 0 32px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16;">
+                ${stats.map(s => `
+                <div style="background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 20px; padding: 28px 20px; text-align: center; border-color: ${s.color}15; border: 1px solid;">
+                    <div style="font-family: 'Chakra Petch', sans-serif; font-size: 36; font-weight: 700; color: ${s.color}; text-shadow: 0 0 20px ${s.color}44">${s.n}</div>
+                    <div style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 3px; color: rgba(255,255,255,0.35); margin-top: 6">${s.l}</div>
+                </div>
+                `).join('')}
+            </div>
+        </section>
+        `;
+    }
+
+    function renderCatalog() {
+        const allB = [...new Set(PRODS.map(p => p.b))];
+        const filtered = getFilteredProducts();
+        const title = state.catFilter ? catOf(state.catFilter)?.name : state.search ? `«${state.search.toUpperCase()}»` : "КАТАЛОГ";
+
+        return `
+        <div style="max-width: 1400; margin: 0 auto; padding: 32px;">
+            <div style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.3); margin-bottom: 28;">
+                <span onclick="navigate('home')" style="cursor: pointer; color: ${neonPink}">ГЛАВНАЯ</span> / КАТАЛОГ
+            </div>
+            <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 42; font-weight: 700; color: #fff; margin: 0 0 32px; letter-spacing: 1px;">
+                ${title} <span style="font-size: 20; color: rgba(255,255,255,0.2)">${filtered.length}</span>
+            </h1>
+            <div style="display: flex; gap: 8; margin-bottom: 16; flex-wrap: wrap;">
+                <button onclick="state.catFilter = null; render()" class="pill-btn ${!state.catFilter ? 'active' : ''}" style="--color: ${neonPink}">ВСЕ</button>
+                ${CATS.map(c => `
+                <button onclick="state.catFilter = state.catFilter === '${c.id}' ? null : '${c.id}'; render()" class="pill-btn ${state.catFilter === c.id ? 'active' : ''}" style="--color: hsla(${c.hue}, 80%, 60%, 1)">${c.em} ${c.name}</button>
+                `).join('')}
+            </div>
+            <div style="display: flex; gap: 8; margin-bottom: 32; flex-wrap: wrap; align-items: center;">
+                ${allB.map(b => `
+                <button onclick="if(state.brandFilter.includes('${b}')) state.brandFilter = state.brandFilter.filter(x => x !== '${b}'); else state.brandFilter.push('${b}'); render()" class="pill-btn ${state.brandFilter.includes(b) ? 'active' : ''}" style="--color: ${neonBlue}">${b}</button>
+                `).join('')}
+                ${state.brandFilter.length > 0 ? `<button onclick="state.brandFilter = []; render()" style="border: none; background: none; cursor: pointer; color: ${neonPink}; font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 1px">СБРОС ×</button>` : ''}
+                <select value="${state.sort}" onchange="state.sort = this.value; render()" style="margin-left: auto; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 50px; padding: 8px 20px; font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 1px; color: #fff; cursor: pointer; appearance: none; border: 1px solid rgba(255,255,255,0.12);">
+                    <option value="popular" style="background: #0A0612">ПОПУЛЯРНОЕ</option>
+                    <option value="pa" style="background: #0A0612">ДЕШЕВЛЕ</option>
+                    <option value="pd" style="background: #0A0612">ДОРОЖЕ</option>
+                    <option value="r" style="background: #0A0612">РЕЙТИНГ</option>
+                </select>
+            </div>
+            ${filtered.length === 0 ? `
+            <div style="text-align: center; padding: 100px 0;">
+                <span style="font-size: 64; display: block; margin-bottom: 16">🌌</span>
+                <p style="font-family: 'Chakra Petch', sans-serif; font-size: 20; color: #fff">НИЧЕГО НЕ НАЙДЕНО</p>
+            </div>` : `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16;">
+                ${filtered.map(p => renderCard(p)).join('')}
+            </div>`}
+        </div>
+        `;
+    }
+
+    function renderProduct() {
+        const p = state.product;
+        if (!p) return '';
+        const cat = catOf(p.c);
+        const hue = cat?.hue || 320;
+        const curSz = state.sizeSelection[p.id] || p.sz[0];
+        const curCl = state.colorSelection[p.id] || p.cl[0];
+        const rel = PRODS.filter(x => x.c === p.c && x.id !== p.id).slice(0, 4);
+
+        return `
+        <div style="max-width: 1400; margin: 0 auto; padding: 32px;">
+            <div style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.3); margin-bottom: 32;">
+                <span onclick="navigate('home')" style="cursor: pointer; color: ${neonPink}">ГЛАВНАЯ</span> /
+                <span onclick="navigate('catalog', '${p.c}')" style="cursor: pointer; color: ${neonPink}"> ${cat?.name}</span> / ${p.n}
+            </div>
+            <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 56;">
+                <div style="background: rgba(255,255,255,0.04); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 28px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border-color: hsla(${hue}, 80%, 60%, 0.15); border: 1px solid;">
+                    <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 70%, hsla(${hue}, 70%, 50%, 0.1), transparent 60%)"></div>
+                    ${p.tag ? `<span style="position: absolute; top: 20; left: 20; background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 50px; padding: 6px 18px; font-family: 'Chakra Petch', sans-serif; font-size: 11; font-weight: 700; letter-spacing: 1.5px; color: hsla(${hue}, 80%, 70%, 1); border: 1px solid hsla(${hue}, 80%, 60%, 0.3); z-index: 1">${p.tag}</span>` : ''}
+                    <span style="font-size: 150; position: relative; z-index: 1; filter: drop-shadow(0 0 30px hsla(${hue}, 80%, 60%, 0.4))">${cat?.em}</span>
+                </div>
+                <div>
+                    <span style="font-family: 'Chakra Petch', sans-serif; font-size: 12; font-weight: 700; letter-spacing: 3px; color: hsla(${hue}, 80%, 70%, 0.8)">${p.b}</span>
+                    <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 34; font-weight: 700; color: #fff; margin: 10px 0 16px; letter-spacing: 0.5px; line-height: 1.15">${p.n}</h1>
+                    <div style="display: flex; align-items: center; gap: 8; margin-bottom: 20;">
+                        ${[1,2,3,4,5].map(i => `<svg key="${i}" width="14" height="14" viewBox="0 0 20 20" fill="${i<=Math.round(p.r) ? neonYellow : 'rgba(255,255,255,0.1)'}"><path d="M10 1l2.39 4.84 5.34.78-3.87 3.77.91 5.33L10 13.27l-4.77 2.51.91-5.33L2.27 6.68l5.34-.78z"/></svg>`).join('')}
+                        <span style="font-family: 'Chakra Petch', sans-serif; font-size: 12; color: rgba(255,255,255,0.35)">${p.r} • ${p.rv} отзывов</span>
+                    </div>
+                    <p style="font-family: 'Chakra Petch', sans-serif; font-size: 14; color: rgba(255,255,255,0.45); line-height: 1.7; margin-bottom: 28; letter-spacing: 0.3px">${p.d}</p>
+                    <div style="display: flex; align-items: baseline; gap: 14; margin-bottom: 32;">
+                        <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 40; font-weight: 700">${fmt(p.p)}</span>
+                        ${p.op ? `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 20; color: rgba(255,255,255,0.2); text-decoration: line-through">${fmt(p.op)}</span>` : ''}
+                        ${p.op ? `<span style="font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 700; color: ${neonGreen}; text-shadow: 0 0 8px ${neonGreen}44">−${pct(p.p,p.op)}%</span>` : ''}
+                    </div>
+                    <div style="margin-bottom: 20;">
+                        <span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 10">ЦВЕТ</span>
+                        <div style="display: flex; gap: 10;">
+                            ${p.cl.map(c => `
+                            <button onclick="state.colorSelection[${p.id}] = '${c}'; render()" style="width: 40; height: 40; border-radius: 50%; background: ${c}; border: ${curCl===c ? `3px solid ${neonPink}` : '2px solid rgba(255,255,255,0.15)'}; cursor: pointer; transition: all 0.2s; box-shadow: ${curCl===c ? `0 0 0 3px #0A0612, 0 0 0 5px ${neonPink}, 0 0 15px ${neonPink}44` : 'none'}" />
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 32;">
+                        <span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 10">РАЗМЕР</span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8;">
+                            ${p.sz.map(s => `
+                            <button onclick="state.sizeSelection[${p.id}] = '${s}'; render()" style="min-width: 52; padding: 12px 16px; border-radius: 14px; background: ${curSz===s ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)'}; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-color: ${curSz===s ? `hsla(${hue}, 80%, 60%, 0.5)` : 'rgba(255,255,255,0.08)'}; border: 1px solid; color: ${curSz===s ? `hsla(${hue}, 80%, 70%, 1)` : 'rgba(255,255,255,0.5)'}; cursor: pointer; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 600; letter-spacing: 1px; transition: all 0.2s; box-shadow: ${curSz===s ? `0 0 15px hsla(${hue}, 80%, 60%, 0.15)` : 'none'}">${s}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12;">
+                        <button onclick="addToCart(${p.id}, '${curSz}', '${curCl}')" class="chrome-bg" style="flex: 1; color: #0A0612; border: none; padding: 18px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 15; font-weight: 700; letter-spacing: 2px; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 30px ${neonPink}33;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 40px ${neonPink}55'"
+                        onmouseout="this.style.transform='none'; this.style.boxShadow='0 0 30px ${neonPink}33'">В КОРЗИНУ ⚡</button>
+                        <button onclick="toggleFav(${p.id})" style="width: 58; height: 58; border-radius: 50%; background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); cursor: pointer; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.12);">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="${state.favs.includes(p.id) ? neonPink : 'none'}" stroke="${state.favs.includes(p.id) ? neonPink : 'rgba(255,255,255,0.3)'}" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div style="margin-top: 28; display: flex; flex-direction: column; gap: 10;">
+                        ${[
+                            { i: "⚡", t: "Экспресс-доставка 24ч" },
+                            { i: "💎", t: "100% оригинал" },
+                            { i: "↩️", t: "Возврат 30 дней" },
+                        ].map(d => `
+                        <div style="display: flex; gap: 10; font-family: 'Chakra Petch', sans-serif; font-size: 12; color: rgba(255,255,255,0.3); letter-spacing: 0.5px">${d.i} ${d.t}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            ${rel.length > 0 ? `
+            <div style="margin-top: 64;">
+                <h2 style="font-family: 'Chakra Petch', sans-serif; font-size: 24; font-weight: 700; color: #fff; margin-bottom: 24; letter-spacing: 1px">ПОХОЖИЕ ТОВАРЫ</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16;">
+                    ${rel.map(r => renderCard(r)).join('')}
+                </div>
+            </div>` : ''}
+        </div>
+        `;
+    }
+
+    function renderCart() {
+        const cnt = getCount();
+        const total = getTotal();
+        const shipping = total >= 5000 ? "FREE" : "499 ₽";
+        const finalTotal = total + (total >= 5000 ? 0 : 499);
+
+        return `
+        <div style="max-width: 1400; margin: 0 auto; padding: 32px;">
+            <div style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 2px; color: rgba(255,255,255,0.3); margin-bottom: 28;">
+                <span onclick="navigate('home')" style="cursor: pointer; color: ${neonPink}">ГЛАВНАЯ</span> / КОРЗИНА
+            </div>
+            <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 42; font-weight: 700; color: #fff; margin: 0 0 36px;">
+                КОРЗИНА ${cnt > 0 ? `<span style="font-size: 20; color: rgba(255,255,255,0.2)">(${cnt})</span>` : ''}
+            </h1>
+            ${state.cart.length === 0 ? `
+            <div style="text-align: center; padding: 100px 0;">
+                <span style="font-size: 72; display: block; margin-bottom: 20">🛸</span>
+                <p style="font-family: 'Chakra Petch', sans-serif; font-size: 22; color: #fff; margin-bottom: 8">КОРЗИНА ПУСТА</p>
+                <p style="font-family: 'Chakra Petch', sans-serif; font-size: 13; color: rgba(255,255,255,0.3); margin-bottom: 32">Время добавить что-то крутое!</p>
+                <button onclick="navigate('catalog', null)" class="chrome-bg" style="color: #0A0612; border: none; padding: 14px 36px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 700; letter-spacing: 2px; cursor: pointer;">В КАТАЛОГ →</button>
+            </div>` : `
+            <div style="display: grid; grid-template-columns: 1fr 380px; gap: 32;">
+                <div style="display: flex; flex-direction: column; gap: 12;">
+                    ${state.cart.map(item => {
+                        const cat = catOf(item.p.c);
+                        return `
+                        <div style="background: rgba(255,255,255,0.04); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 20px; padding: 20; display: flex; gap: 20; align-items: center; border: 1px solid rgba(255,255,255,0.12);">
+                            <div onclick="navigate('product', ${item.p.id})" style="width: 80; height: 80; border-radius: 16px; flex-shrink: 0; background: radial-gradient(circle, hsla(${cat?.hue||0}, 70%, 50%, 0.15), transparent); display: flex; align-items: center; justify-content: center; font-size: 36; cursor: pointer;">${cat?.em}</div>
+                            <div style="flex: 1;">
+                                <span style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: hsla(${cat?.hue||0}, 80%, 70%, 0.7)">${item.p.b}</span>
+                                <h3 style="font-family: 'Chakra Petch', sans-serif; font-size: 14; font-weight: 600; color: #fff; margin: 4px 0; letter-spacing: 0.3px">${item.p.n}</h3>
+                                <span style="font-family: 'Chakra Petch', sans-serif; font-size: 11; color: rgba(255,255,255,0.3)">
+                                ${item.s} • <span style="display: inline-block; width: 10; height: 10; border-radius: 50%; background: ${item.c}; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2)"></span>
+                                </span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0;">
+                                <button onclick="updateQty('${item.k}', -1)" style="width: 32; height: 32; border-radius: 10px; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; color: #fff; font-family: 'Chakra Petch', sans-serif; font-size: 14; font-weight: 700; border: 1px solid rgba(255,255,255,0.12)">−</button>
+                                <span style="width: 36; text-align: center; font-family: 'Chakra Petch', sans-serif; font-weight: 700; color: #fff; font-size: 14">${item.q}</span>
+                                <button onclick="updateQty('${item.k}', 1)" style="width: 32; height: 32; border-radius: 10px; background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; color: #fff; font-family: 'Chakra Petch', sans-serif; font-size: 14; font-weight: 700; border: 1px solid rgba(255,255,255,0.12)">+</button>
+                            </div>
+                            <span style="font-family: 'Chakra Petch', sans-serif; font-size: 16; font-weight: 700; color: #fff; min-width: 100; text-align: right">${fmt(item.p.p * item.q)}</span>
+                            <button onclick="removeFromCart('${item.k}')" style="border: none; background: none; color: rgba(255,255,255,0.2); cursor: pointer; font-size: 18"
+                            onmouseover="this.style.color='${neonPink}'"
+                            onmouseout="this.style.color='rgba(255,255,255,0.2)'">✕</button>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-radius: 24px; padding: 32; align-self: flex-start; position: sticky; top: 140; border: 1px solid rgba(255,255,255,0.12);">
+                    <h3 style="font-family: 'Chakra Petch', sans-serif; font-size: 20; font-weight: 700; color: #fff; margin: 0 0 24px; letter-spacing: 1px">ИТОГО</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12; font-family: 'Chakra Petch', sans-serif; font-size: 13;">
+                        <span style="color: rgba(255,255,255,0.4)">Товары (${cnt})</span><span style="color: #fff; font-weight: 600">${fmt(total)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12; font-family: 'Chakra Petch', sans-serif; font-size: 13;">
+                        <span style="color: rgba(255,255,255,0.4)">Доставка</span><span style="color: ${neonGreen}; font-weight: 600">${shipping}</span>
+                    </div>
+                    <div style="height: 1; background: rgba(255,255,255,0.06); margin: 18px 0"></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 28;">
+                        <span style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; color: #fff; letter-spacing: 1px">К ОПЛАТЕ</span>
+                        <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 28; font-weight: 700">${fmt(finalTotal)}</span>
+                    </div>
+                    <button onclick="state.checkoutStep = 1; state.ordered = false; navigate('checkout')" class="chrome-bg" style="width: 100%; color: #0A0612; border: none; padding: 18px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 14; font-weight: 700; letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 30px ${neonPink}33;">ОФОРМИТЬ ⚡</button>
+                </div>
+            </div>`}
+        </div>
+        `;
+    }
+
+    function renderCheckout() {
+        if (state.ordered) {
+            return `
+            <div style="max-width: 500; margin: 100px auto; text-align: center; padding: 32;">
+                <div style="width: 90; height: 90; border-radius: 50%; background: var(--chrome); background-size: 300% 300%; animation: gradShift 4s ease infinite; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; box-shadow: 0 0 40px ${neonPink}44;">
+                    <div style="width: 80; height: 80; border-radius: 50%; background: #0A0612; display: flex; align-items: center; justify-content: center; font-size: 36;">✓</div>
+                </div>
+                <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 32; font-weight: 700; color: #fff; margin-bottom: 8; letter-spacing: 1px">ЗАКАЗ ОФОРМЛЕН! ⚡</h1>
+                <p style="font-family: 'Chakra Petch', sans-serif; font-size: 14; color: rgba(255,255,255,0.4); margin-bottom: 32">#${Math.floor(Math.random()*900000+100000)} — подтверждение на почте</p>
+                <button onclick="state.cart = []; navigate('home')" class="chrome-bg" style="color: #0A0612; border: none; padding: 14px 36px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 700; letter-spacing: 2px; cursor: pointer">НА ГЛАВНУЮ</button>
+            </div>
+            `;
+        }
+
+        const total = getTotal();
+        const shipping = total >= 5000 ? "FREE" : "499₽";
+        const finalTotal = total + (total >= 5000 ? 0 : 499);
+        const steps = ["КОНТАКТЫ", "ДОСТАВКА", "ОПЛАТА"];
+
+        return `
+        <div style="max-width: 700; margin: 0 auto; padding: 32px;">
+            <h1 style="font-family: 'Chakra Petch', sans-serif; font-size: 36; font-weight: 700; color: #fff; margin: 0 0 32px; letter-spacing: 1px">ОФОРМЛЕНИЕ</h1>
+            <div style="display: flex; gap: 4; margin-bottom: 36;">
+                ${steps.map((s, i) => `
+                <div style="flex: 1; padding: 14; text-align: center; border-radius: 14px; font-family: 'Chakra Petch', sans-serif; font-size: 11; font-weight: 600; letter-spacing: 1.5px; background: ${state.checkoutStep >= i+1 ? 'var(--chrome)' : 'rgba(255,255,255,0.04)'}; background-size: 300% 300%; animation: ${state.checkoutStep >= i+1 ? 'gradShift 4s ease infinite' : 'none'}; color: ${state.checkoutStep >= i+1 ? '#0A0612' : 'rgba(255,255,255,0.25)'}; transition: all 0.3s;">${s}</div>
+                `).join('')}
+            </div>
+            <div style="background: rgba(255,255,255,0.04); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-radius: 24px; padding: 36; border: 1px solid rgba(255,255,255,0.12);">
+                ${state.checkoutStep === 1 ? `
+                <div style="display: flex; flex-direction: column; gap: 18;">
+                    <div><label style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 8">ИМЯ</label><input style="width: 100%; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #fff; font-size: 14; font-family: 'Chakra Petch', sans-serif; outline: none; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.12)" onfocus="this.style.borderColor='${neonPink}55'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" /></div>
+                    <div><label style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 8">ФАМИЛИЯ</label><input style="width: 100%; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #fff; font-size: 14; font-family: 'Chakra Petch', sans-serif; outline: none; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.12)" onfocus="this.style.borderColor='${neonPink}55'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" /></div>
+                    <div><label style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 8">EMAIL</label><input style="width: 100%; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #fff; font-size: 14; font-family: 'Chakra Petch', sans-serif; outline: none; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.12)" onfocus="this.style.borderColor='${neonPink}55'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" /></div>
+                    <div><label style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 8">ТЕЛЕФОН</label><input style="width: 100%; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #fff; font-size: 14; font-family: 'Chakra Petch', sans-serif; outline: none; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.12)" onfocus="this.style.borderColor='${neonPink}55'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" /></div>
+                    <button onclick="state.checkoutStep = 2; render()" class="chrome-bg" style="color: #0A0612; border: none; padding: 16px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 700; letter-spacing: 2px; cursor: pointer; margin-top: 8">ДАЛЕЕ →</button>
+                </div>` : ''}
+
+                ${state.checkoutStep === 2 ? `
+                <div style="display: flex; flex-direction: column; gap: 18;">
+                    ${[
+                        { n: "ЭКСПРЕСС 24Ч", d: "Курьер по Москве", pr: total >= 5000 ? "FREE" : "499₽" },
+                        { n: "СТАНДАРТ", d: "2-5 рабочих дней", pr: "FREE" },
+                        { n: "САМОВЫВОЗ", d: "Сегодня из магазина", pr: "FREE" },
+                    ].map(dl => `
+                    <label style="display: flex; align-items: center; gap: 16; padding: 18; border-radius: 16px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.12)"
+                    onmouseover="this.style.borderColor='${neonPink}44'"
+                    onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
+                        <input type="radio" name="del" ${dl.n === "ЭКСПРЕСС 24Ч" ? 'checked' : ''} style="accent-color: ${neonPink}" />
+                        <div style="flex: 1;">
+                            <div style="font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 600; color: #fff; letter-spacing: 1px">${dl.n}</div>
+                            <div style="font-family: 'Chakra Petch', sans-serif; font-size: 11; color: rgba(255,255,255,0.35); margin-top: 2">${dl.d}</div>
+                        </div>
+                        <span style="font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 600; color: ${dl.pr === "FREE" ? neonGreen : '#fff'}">${dl.pr}</span>
+                    </label>
+                    `).join('')}
+                    <div><label style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 8">ГОРОД</label><input style="width: 100%; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #fff; font-size: 14; font-family: 'Chakra Petch', sans-serif; outline: none; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.12)" onfocus="this.style.borderColor='${neonPink}55'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" /></div>
+                    <div><label style="font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.35); display: block; margin-bottom: 8">АДРЕС</label><input style="width: 100%; padding: 14px 18px; border-radius: 14px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: #fff; font-size: 14; font-family: 'Chakra Petch', sans-serif; outline: none; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.12)" onfocus="this.style.borderColor='${neonPink}55'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" /></div>
+                    <div style="display: flex; gap: 12;">
+                        <button onclick="state.checkoutStep = 1; render()" style="flex: 1; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 50px; padding: 14px; font-family: 'Chakra Petch', sans-serif; font-size: 12; font-weight: 600; letter-spacing: 1px; cursor: pointer; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12)">← НАЗАД</button>
+                        <button onclick="state.checkoutStep = 3; render()" class="chrome-bg" style="flex: 2; color: #0A0612; border: none; padding: 14px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 700; letter-spacing: 2px; cursor: pointer">ДАЛЕЕ →</button>
+                    </div>
+                </div>` : ''}
+
+                ${state.checkoutStep === 3 ? `
+                <div style="display: flex; flex-direction: column; gap: 18;">
+                    ${[
+                        { n: "КАРТА", d: "Visa / MC / МИР" },
+                        { n: "СБП", d: "Быстрый перевод" },
+                        { n: "ПРИ ПОЛУЧЕНИИ", d: "Наличные / карта" },
+                    ].map(pm => `
+                    <label style="display: flex; align-items: center; gap: 16; padding: 18; border-radius: 16px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); cursor: pointer; border: 1px solid rgba(255,255,255,0.12)"
+                    onmouseover="this.style.borderColor='${neonPink}44'"
+                    onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'">
+                        <input type="radio" name="pay" ${pm.n === "КАРТА" ? 'checked' : ''} style="accent-color: ${neonPink}" />
+                        <div><div style="font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 600; color: #fff; letter-spacing: 1px">${pm.n}</div><div style="font-family: 'Chakra Petch', sans-serif; font-size: 11; color: rgba(255,255,255,0.35); margin-top: 2">${pm.d}</div></div>
+                    </label>
+                    `).join('')}
+                    <div style="background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 16px; padding: 20; border: 1px solid rgba(255,255,255,0.12);">
+                        ${state.cart.map(i => `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8; font-family: 'Chakra Petch', sans-serif; font-size: 12;">
+                            <span style="color: rgba(255,255,255,0.4)">${i.p.n} × ${i.q}</span><span style="color: #fff; font-weight: 600">${fmt(i.p.p*i.q)}</span>
+                        </div>
+                        `).join('')}
+                        <div style="height: 1; background: rgba(255,255,255,0.06); margin: 12px 0"></div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-family: 'Chakra Petch', sans-serif; font-weight: 600; color: #fff; letter-spacing: 1px">ИТОГО</span>
+                            <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 22; font-weight: 700">${fmt(finalTotal)}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12;">
+                        <button onclick="state.checkoutStep = 2; render()" style="flex: 1; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 50px; padding: 14px; font-family: 'Chakra Petch', sans-serif; font-size: 12; font-weight: 600; letter-spacing: 1px; cursor: pointer; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12)">← НАЗАД</button>
+                        <button onclick="state.ordered = true; render()" class="chrome-bg" style="flex: 2; color: #0A0612; border: none; padding: 14px; border-radius: 50px; font-family: 'Chakra Petch', sans-serif; font-size: 13; font-weight: 700; letter-spacing: 2px; cursor: pointer">ОПЛАТИТЬ ⚡</button>
+                    </div>
+                </div>` : ''}
+            </div>
+        </div>
+        `;
+    }
+
+    function renderFooter() {
+        const cols = [
+            { t: "МАГАЗИН", l: ["Каталог", "Бренды", "Sale", "Новинки"] },
+            { t: "ПОМОЩЬ", l: ["Доставка", "Возврат", "Размеры", "FAQ"] },
+            { t: "КОНТАКТЫ", l: ["8 (800) 000-00-00", "hey@turbosport.ru", "Москва", "Пн-Вс 9-21"] },
+        ];
+        return `
+        <footer style="border-top: 1px solid rgba(255,255,255,0.04); margin-top: 80;">
+            <div style="max-width: 1400; margin: 0 auto; padding: 56px 32px 36px;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40; margin-bottom: 40;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10; margin-bottom: 16;">
+                            <div style="width: 28; height: 28; border-radius: 50%; background: var(--chrome); background-size: 300% 300%; animation: gradShift 4s ease infinite; display: flex; align-items: center; justify-content: center;">
+                                <div style="width: 22; height: 22; border-radius: 50%; background: #0A0612; display: flex; align-items: center; justify-content: center;">
+                                    <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 10; font-weight: 700;">T</span>
+                                </div>
+                            </div>
+                            <span class="chrome-text" style="font-family: 'Chakra Petch', sans-serif; font-size: 16; font-weight: 700; letter-spacing: 3px;">TURBO</span>
+                        </div>
+                        <p style="font-family: 'Chakra Petch', sans-serif; font-size: 12; color: rgba(255,255,255,0.2); line-height: 1.7; max-width: 280;">Спортивная экипировка будущего. Оригинальные товары от мировых брендов.</p>
+                    </div>
+                    ${cols.map(c => `
+                    <div>
+                        <h4 style="font-family: 'Chakra Petch', sans-serif; font-size: 11; letter-spacing: 3px; color: rgba(255,255,255,0.4); margin-bottom: 16">${c.t}</h4>
+                        ${c.l.map(l => `
+                        <div style="font-family: 'Chakra Petch', sans-serif; font-size: 12; color: rgba(255,255,255,0.2); margin-bottom: 8; cursor: pointer; transition: color 0.2s"
+                        onmouseover="this.style.color='#fff'"
+                        onmouseout="this.style.color='rgba(255,255,255,0.2)'">${l}</div>
+                        `).join('')}
+                    </div>
+                    `).join('')}
+                </div>
+                <div style="border-top: 1px solid rgba(255,255,255,0.04); padding-top: 20; font-family: 'Chakra Petch', sans-serif; font-size: 10; letter-spacing: 2px; color: rgba(255,255,255,0.1)">
+                    © 2026 TURBO SPORT — FUTURE IS NOW ★
+                </div>
+            </div>
+        </footer>
+        `;
+    }
+
+    // ============================================================
+    // MAIN RENDER LOOP
+    // ============================================================
+    function render() {
+        const app = document.getElementById('app');
+        let content = '';
+
+        // Header is always visible
+        content += renderHeader();
+
+        // Main Content
+        content += '<main>';
+        if (state.page === 'home') {
+            content += renderHero();
+            content += renderSection("ХИТЫ ПРОДАЖ", "★ САМОЕ ПОПУЛЯРНОЕ", PRODS.filter(p => p.rv > 100).slice(0, 5));
+            content += renderPromoBanners();
+            content += renderSection("СО СКИДКОЙ", "🔥 УСПЕЙ ЗАБРАТЬ", PRODS.filter(p => p.op).slice(0, 4));
+            content += renderStats();
+        } else if (state.page === 'catalog') {
+            content += renderCatalog();
+        } else if (state.page === 'product') {
+            content += renderProduct();
+        } else if (state.page === 'cart') {
+            content += renderCart();
+        } else if (state.page === 'checkout') {
+            content += renderCheckout();
+        }
+        content += '</main>';
+
+        // Footer is always visible
+        content += renderFooter();
+
+        app.innerHTML = content;
+    }
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', () => {
+        render();
+        
+        // Mouse tracking for Hero gradient
+        window.addEventListener('mousemove', e => {
+            const x = (e.clientX / window.innerWidth) * 100;
+            const y = (e.clientY / window.innerHeight) * 100;
+            document.documentElement.style.setProperty('--mouse-x', x);
+            document.documentElement.style.setProperty('--mouse-y', y);
+        });
+    });
+
+</script>
+</body>
+</html>
